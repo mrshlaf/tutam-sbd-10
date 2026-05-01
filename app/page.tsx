@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Plus, Trash2, Search, Loader2, X, Notebook, Save, Edit3, Pin, Copy, Check, Clock, Type,
   Moon, Sun, AlertTriangle
 } from "lucide-react";
 
-const API_URL = "http://127.0.0.1:5000/api/notes";
+const API_URL = typeof window !== "undefined" && window.location.hostname === "localhost"
+  ? "http://127.0.0.1:5000/api/notes"
+  : "/_/backend/api/notes";
 
 interface Note {
   _id: string;
@@ -36,7 +38,7 @@ export default function Home() {
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
-      setNotes(data);
+      setNotes(Array.isArray(data) ? data : []);
     } catch (err) { } finally { setLoading(false); }
   }, []);
 
@@ -124,8 +126,8 @@ export default function Home() {
     return new Date(dateStr).toLocaleDateString();
   };
 
-  const filteredNotes = notes.filter(n => 
-    n.title.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredNotes = notes.filter(n =>
+    n.title.toLowerCase().includes(search.toLowerCase()) ||
     n.content.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -148,7 +150,7 @@ export default function Home() {
         <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center gap-4 sm:gap-6 w-full md:w-auto">
           <div className="relative group flex-1 md:w-[350px]">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors" size={16} />
-            <input 
+            <input
               type="text" placeholder="Search entries..." value={search} onChange={(e) => setSearch(e.target.value)}
               className={`w-full pl-12 pr-6 py-3.5 rounded-2xl outline-none text-sm font-medium transition-all border ${darkMode ? "bg-zinc-900/50 border-zinc-800 text-white focus:bg-zinc-900 placeholder:text-zinc-600" : "bg-white border-zinc-200 focus:border-black"}`}
             />
@@ -167,11 +169,11 @@ export default function Home() {
               <span className="flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-white/5 rounded-full"><Type size={10} /> {content.length}</span>
             </div>
             <form onSubmit={handleCreate} className="space-y-8">
-              <input 
+              <input
                 type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                className={`w-full bg-transparent border-b-2 py-3 text-2xl font-bold outline-none transition-all ${darkMode ? "border-zinc-800 text-white focus:border-white placeholder:text-zinc-800" : "border-zinc-100 text-black focus:border-black placeholder:text-zinc-200"}`} placeholder="Vault Title" 
+                className={`w-full bg-transparent border-b-2 py-3 text-2xl font-bold outline-none transition-all ${darkMode ? "border-zinc-800 text-white focus:border-white placeholder:text-zinc-800" : "border-zinc-100 text-black focus:border-black placeholder:text-zinc-200"}`} placeholder="Vault Title"
               />
-              <textarea 
+              <textarea
                 value={content} onChange={(e) => setContent(e.target.value)} rows={5}
                 className={`w-full rounded-3xl p-6 text-base font-medium outline-none resize-none transition-all leading-relaxed ${darkMode ? "bg-black/50 border border-zinc-800 text-white focus:border-zinc-600 placeholder:text-zinc-700" : "bg-zinc-50 focus:bg-white border-transparent focus:border-zinc-200 text-black"}`}
                 placeholder="What's on your mind?"
@@ -250,8 +252,8 @@ export default function Home() {
         {selectedNote && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-sans">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeNote} className="absolute inset-0 bg-black/80 backdrop-blur-2xl" />
-            <motion.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.98 }} className={`relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border transition-all ${darkMode ? "bg-zinc-900 text-white border-white/5" : "bg-white border-transparent"}`}>
-              
+            <motion.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.98 }} className={`relative w-full max-w-3xl max-h-[85vh] flex flex-col rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden border transition-all ${darkMode ? "bg-zinc-950 text-white border-white/5" : "bg-white border-transparent"}`}>
+
               <div className="flex justify-between items-center px-8 py-6 border-b border-zinc-100/10 shrink-0">
                 <div className="flex gap-3">
                   <button onClick={() => setIsEditing(!isEditing)} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-zinc-100 text-black hover:bg-zinc-200"}`}>
@@ -303,7 +305,7 @@ export default function Home() {
         {deleteConfirmId && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 font-sans">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirmId(null)} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
-            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className={`relative w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 text-center border transition-all ${darkMode ? "bg-zinc-900 border-zinc-800 text-white" : "bg-white border-zinc-100"}`}>
+            <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} className={`relative w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 text-center border transition-all ${darkMode ? "bg-zinc-950 border-zinc-800 text-white" : "bg-white border-zinc-100"}`}>
               <div className="w-16 h-16 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600 shadow-inner">
                 <AlertTriangle size={32} />
               </div>
