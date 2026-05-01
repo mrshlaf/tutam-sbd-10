@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const mongoose = require('mongoose');
 const Note = require('./models/Note');
 
@@ -57,8 +58,11 @@ const dummyNotes = [
 
 const seedDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("Connected to MongoDB...");
+    const uri = process.env.MONGODB_URI;
+    if (!uri) throw new Error("MONGODB_URI is undefined. Check your .env file path.");
+    
+    await mongoose.connect(uri);
+    console.log("Connected to MongoDB Atlas...");
     
     await Note.deleteMany({});
     console.log("Existing notes cleared.");
@@ -68,7 +72,7 @@ const seedDB = async () => {
     
     mongoose.connection.close();
   } catch (error) {
-    console.error("Error seeding database:", error);
+    console.error("Error seeding database:", error.message);
   }
 };
 
